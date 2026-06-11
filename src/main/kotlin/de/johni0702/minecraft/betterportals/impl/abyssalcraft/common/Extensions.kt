@@ -19,7 +19,6 @@ import net.minecraft.util.math.AxisAlignedBB
 import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.event.world.WorldEvent
 import net.minecraftforge.fml.client.registry.RenderingRegistry
-import net.minecraftforge.fml.common.Loader
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import net.minecraftforge.fml.common.registry.EntityRegistry
 import net.minecraftforge.registries.IForgeRegistry
@@ -30,21 +29,14 @@ const val ABYSSALCRAFT_MOD_ID = "abyssalcraft"
 
 lateinit var ABYSSALCRAFT_PORTAL_CONFIG: PortalConfiguration
 
-private val hasAbyssalcraft by lazy { Loader.isModLoaded(ABYSSALCRAFT_MOD_ID) }
-
 fun initAbyssalcraft(
         mod: Any,
         clientPreInit: (() -> Unit) -> Unit,
         init: (() -> Unit) -> Unit,
         registerBlocks: (IForgeRegistry<Block>.() -> Unit) -> Unit,
-        enableAbyssalcraftPortals: Boolean,
         configAbyssalcraftPortals: PortalConfiguration
 ) {
     ABYSSALCRAFT_PORTAL_CONFIG = configAbyssalcraftPortals
-
-    if (!enableAbyssalcraftPortals || !hasAbyssalcraft) {
-        return
-    }
 
     clientPreInit {
         RenderingRegistry.registerEntityRenderingHandler(AbyssPortalEntity::class.java) {

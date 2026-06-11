@@ -1,5 +1,6 @@
 package de.johni0702.minecraft.view.common
 
+import de.johni0702.minecraft.betterportals.impl.BetterPortalsMod
 import de.johni0702.minecraft.view.client.ClientViewAPI
 import de.johni0702.minecraft.view.client.ClientWorldsManager
 import de.johni0702.minecraft.view.client.render.RenderPass
@@ -19,16 +20,7 @@ import net.minecraftforge.fml.relauncher.Side
 interface ViewAPI {
     companion object {
         @JvmStatic
-        val instance by lazy {
-            val mod = Loader.instance().indexedModList["betterportals"]?.mod
-            if (mod == null && FMLCommonHandler.instance().side == Side.CLIENT && FMLClientHandler.instance().hasError()) {
-                // Forge has probably aborted mod loading and may wish to show a user-friendly error GUI,
-                // so we need to return a dummy ViewAPI implementation as otherwise we would have to crash.
-                FailureFallbackViewAPI
-            } else {
-                mod as ViewAPI
-            }
-        }
+        val instance = BetterPortalsMod
     }
 
     /**

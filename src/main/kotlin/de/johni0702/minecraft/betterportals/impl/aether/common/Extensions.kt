@@ -15,7 +15,6 @@ import net.minecraft.util.math.AxisAlignedBB
 import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.event.world.WorldEvent
 import net.minecraftforge.fml.client.registry.RenderingRegistry
-import net.minecraftforge.fml.common.Loader
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import net.minecraftforge.fml.common.registry.EntityRegistry
 import net.minecraftforge.registries.IForgeRegistry
@@ -26,21 +25,14 @@ const val AETHER_MOD_ID = "aether_legacy"
 
 lateinit var AETHER_PORTAL_CONFIG: PortalConfiguration
 
-private val hasAether by lazy { Loader.isModLoaded(AETHER_MOD_ID) }
-
 fun initAether(
         mod: Any,
         clientPreInit: (() -> Unit) -> Unit,
         init: (() -> Unit) -> Unit,
         registerBlocks: (IForgeRegistry<Block>.() -> Unit) -> Unit,
-        enableAetherPortals: Boolean,
         configAetherPortals: PortalConfiguration
 ) {
     AETHER_PORTAL_CONFIG = configAetherPortals
-
-    if (!enableAetherPortals || !hasAether) {
-        return
-    }
 
     clientPreInit {
         RenderingRegistry.registerEntityRenderingHandler(AetherPortalEntity::class.java) {

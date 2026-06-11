@@ -2,13 +2,8 @@ package de.johni0702.minecraft.betterportals.impl
 
 import de.johni0702.minecraft.betterportals.common.BetterPortalsAPI
 import de.johni0702.minecraft.betterportals.common.PortalConfiguration
-import de.johni0702.minecraft.betterportals.impl.abyssalcraft.common.initAbyssalcraft
-import de.johni0702.minecraft.betterportals.impl.aether.common.initAether
 import de.johni0702.minecraft.betterportals.impl.common.initPortal
-import de.johni0702.minecraft.betterportals.impl.mekanism.common.initMekanism
-import de.johni0702.minecraft.betterportals.impl.tf.common.initTwilightForest
 import de.johni0702.minecraft.betterportals.impl.transition.common.initTransition
-import de.johni0702.minecraft.betterportals.impl.travelhuts.common.initTravelHuts
 import de.johni0702.minecraft.betterportals.impl.vanilla.common.initVanilla
 import de.johni0702.minecraft.view.common.ViewAPI
 import de.johni0702.minecraft.view.impl.MOD_ID
@@ -21,6 +16,7 @@ import net.minecraft.client.resources.IResourcePack
 import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.common.config.Config
 import net.minecraftforge.common.config.ConfigManager
+import net.minecraftforge.fml.common.Loader
 import net.minecraftforge.event.RegistryEvent
 import net.minecraftforge.fml.common.Mod
 import net.minecraftforge.fml.common.SidedProxy
@@ -37,7 +33,7 @@ const val MOD_ID = "betterportals"
 
 lateinit var LOGGER: Logger
 
-@Mod(modid = MOD_ID, useMetadata = true)
+@Mod(modid = MOD_ID, useMetadata = true, version = Reference.VERSION, modLanguage = "kotlin", modLanguageAdapter = "io.github.chaosunity.forgelin.KotlinAdapter", dependencies = "required-after:forgelin_continuous")
 object BetterPortalsMod: ViewAPI by ViewAPIImpl, BetterPortalsAPI by BetterPortalsAPIImpl {
 
     internal val clientPreInitCallbacks = mutableListOf<() -> Unit>()
@@ -89,49 +85,54 @@ object BetterPortalsMod: ViewAPI by ViewAPIImpl, BetterPortalsAPI by BetterPorta
                 configEndPortals = BPConfig.endPortals.toConfiguration()
         )
 
-        initTwilightForest(
-                mod = this,
-                init = { commonInitCallbacks.add(it) },
-                clientPreInit = { clientPreInitCallbacks.add(it) },
-                registerBlocks = { registerBlockCallbacks.add(it) },
-                enableTwilightForestPortals = BPConfig.twilightForestPortals.enabled,
-                configTwilightForestPortals = BPConfig.twilightForestPortals.toConfiguration()
-        )
+        if (BPConfig.twilightForestPortals.enabled && Loader.isModLoaded("twilightforest")) {
+            de.johni0702.minecraft.betterportals.impl.tf.common.initTwilightForest(
+                    mod = this,
+                    init = { commonInitCallbacks.add(it) },
+                    clientPreInit = { clientPreInitCallbacks.add(it) },
+                    registerBlocks = { registerBlockCallbacks.add(it) },
+                    configTwilightForestPortals = BPConfig.twilightForestPortals.toConfiguration()
+            )
+        }
 
-        initMekanism(
-                init = { commonInitCallbacks.add(it) },
-                postInit = { commonPostInitCallbacks.add(it) },
-                clientPostInit = { clientPostInitCallbacks.add(it) },
-                enableMekanismPortals = BPConfig.mekanismPortals.enabled,
-                configMekanismPortals = BPConfig.mekanismPortals.toConfiguration()
-        )
+        if (BPConfig.mekanismPortals.enabled && Loader.isModLoaded("mekanism")) {
+            de.johni0702.minecraft.betterportals.impl.mekanism.common.initMekanism(
+                    init = { commonInitCallbacks.add(it) },
+                    postInit = { commonPostInitCallbacks.add(it) },
+                    clientPostInit = { clientPostInitCallbacks.add(it) },
+                    configMekanismPortals = BPConfig.mekanismPortals.toConfiguration()
+            )
+        }
 
-        initAether(
-                mod = this,
-                init = { commonInitCallbacks.add(it) },
-                clientPreInit = { clientPreInitCallbacks.add(it) },
-                registerBlocks = { registerBlockCallbacks.add(it) },
-                enableAetherPortals = BPConfig.aetherPortals.enabled,
-                configAetherPortals = BPConfig.aetherPortals.toConfiguration()
-        )
+        if (BPConfig.aetherPortals.enabled && Loader.isModLoaded("aether_legacy")) {
+            de.johni0702.minecraft.betterportals.impl.aether.common.initAether(
+                    mod = this,
+                    init = { commonInitCallbacks.add(it) },
+                    clientPreInit = { clientPreInitCallbacks.add(it) },
+                    registerBlocks = { registerBlockCallbacks.add(it) },
+                    configAetherPortals = BPConfig.aetherPortals.toConfiguration()
+            )
+        }
 
-        initAbyssalcraft(
-                mod = this,
-                init = { commonInitCallbacks.add(it) },
-                clientPreInit = { clientPreInitCallbacks.add(it) },
-                registerBlocks = { registerBlockCallbacks.add(it) },
-                enableAbyssalcraftPortals = BPConfig.abyssalcraftPortals.enabled,
-                configAbyssalcraftPortals = BPConfig.abyssalcraftPortals.toConfiguration()
-        )
+        if (BPConfig.abyssalcraftPortals.enabled && Loader.isModLoaded("abyssalcraft")) {
+            de.johni0702.minecraft.betterportals.impl.abyssalcraft.common.initAbyssalcraft(
+                    mod = this,
+                    init = { commonInitCallbacks.add(it) },
+                    clientPreInit = { clientPreInitCallbacks.add(it) },
+                    registerBlocks = { registerBlockCallbacks.add(it) },
+                    configAbyssalcraftPortals = BPConfig.abyssalcraftPortals.toConfiguration()
+            )
+        }
 
-        initTravelHuts(
-                mod = this,
-                init = { commonInitCallbacks.add(it) },
-                clientPreInit = { clientPreInitCallbacks.add(it) },
-                registerBlocks = { registerBlockCallbacks.add(it) },
-                enableTravelHutsPortals = BPConfig.travelHutsPortals.enabled,
-                configTravelHutsPortals = BPConfig.travelHutsPortals.toConfiguration()
-        )
+        if (BPConfig.travelHutsPortals.enabled && Loader.isModLoaded("travelhut")) {
+            de.johni0702.minecraft.betterportals.impl.travelhuts.common.initTravelHuts(
+                    mod = this,
+                    init = { commonInitCallbacks.add(it) },
+                    clientPreInit = { clientPreInitCallbacks.add(it) },
+                    registerBlocks = { registerBlockCallbacks.add(it) },
+                    configTravelHutsPortals = BPConfig.travelHutsPortals.toConfiguration()
+            )
+        }
     }
 
     @Mod.EventHandler
@@ -221,6 +222,6 @@ object BetterPortalsMod: ViewAPI by ViewAPIImpl, BetterPortalsAPI by BetterPorta
         }
     }
 
-    @SidedProxy(modId = MOD_ID, serverSide = "de.johni0702.minecraft.betterportals.impl.BetterPortalsMod.ServerProxy", clientSide = "de.johni0702.minecraft.betterportals.impl.BetterPortalsMod.ClientProxy")
+    @SidedProxy(modId = MOD_ID, serverSide = $$"de.johni0702.minecraft.betterportals.impl.BetterPortalsMod$ServerProxy", clientSide = $$"de.johni0702.minecraft.betterportals.impl.BetterPortalsMod$ClientProxy")
     lateinit var PROXY: Proxy
 }
