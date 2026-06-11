@@ -1,0 +1,13 @@
+{
+  "required": false,
+  "package": "de.johni0702.minecraft.betterportals.impl.transition.mixin",
+  "plugin": "de.johni0702.minecraft.betterportals.impl.BetterPortalsMixinConfigPlugin",
+  "mixins": [
+    "MixinPlayerList"
+  ],
+  "server": [],
+  "client": [
+  ],
+  "compatibilityLevel": "JAVA_25",
+  "minVersion": "0.8.7"
+}

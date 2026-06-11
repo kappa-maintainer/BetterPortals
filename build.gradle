@@ -5,7 +5,7 @@ plugins {
     id 'maven-publish'
     id 'com.gradleup.shadow' version '9.4.1'
     id 'org.jetbrains.gradle.plugin.idea-ext' version '1.4.1'
-    id 'xyz.wagyourtail.unimined' version '1.4.19-kappa'
+    id 'xyz.wagyourtail.unimined' version '1.4.21-kappa'
     id 'net.kyori.blossom' version '2.2.0'
 }
 
@@ -35,6 +35,10 @@ java {
     }
 }
 
+kotlin {
+    jvmToolchain(25)
+}
+
 configurations {
     contain
     implementation.extendsFrom(contain)
@@ -44,6 +48,47 @@ configurations {
     runtimeOnly.extendsFrom(modRuntimeOnly)
 }
 
+tasks.withType(ProcessResources).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.withType(Jar).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+processResources {
+    rename '(.+_at.cfg)', 'META-INF/$1'
+}
+
+sourceSets {
+    main {
+        blossom {
+            javaSources {
+                property('mod_id', mod_id)
+                property('mod_name', mod_name)
+                property('mod_version', mod_version)
+                property('package', 'de.johni0702.minecraft.betterportals.impl')
+            }
+            resources {
+                property('mod_id', mod_id)
+                property('mod_name', mod_name)
+                property('mod_version', mod_version)
+                property('mod_description', mod_description)
+                property('mod_authors', mod_authors.toString().split(',').findAll { !it.isBlank() }.collect { "\"${it.strip()}\"" }.join(', '))
+                property('mod_credits', mod_credits)
+                property('mod_url', mod_url)
+                property('mod_update_json', mod_update_json)
+                property('mod_logo_path', mod_logo_path)
+            }
+        }
+    }
+    
+    integrationTest {
+        compileClasspath += sourceSets.main.compileClasspath
+        compileClasspath += sourceSets.main.output
+    }
+}
+
 def remapTaskName = enable_shadow.toBoolean() ? "remapShadowJar" : "remapJar"
 
 //noinspection GroovyAssignabilityCheck
@@ -51,15 +96,17 @@ unimined.minecraft {
     version "1.12.2"
 
     mappings {
-        mcp("stable", "39-1.12")
+        mcp("snapshot", "20171003-1.12")
     }
 
     cleanroom {
         if (use_access_transformer.toBoolean()) {
             accessTransformer "${rootProject.projectDir}/src/main/resources/$access_transformer_locations"
         }
-        loader "0.5.12-alpha"
+        loader "0.5.14-alpha"
         runs.all {
+            systemProperty("crl.dev.mixin", "mixins.betterportals.json,mixins.betterportals.transition.json,mixins.betterportals.view.json")
+            jvmArgs('-Xmx4g')
             args += ['--username', minecraft_username]
             def extraArgs = extra_jvm_args
             if (extraArgs != null && !extraArgs.trim().isEmpty()) {
@@ -106,69 +153,13 @@ dependencies {
 
 apply from: 'gradle/scripts/dependencies.gradle'
 
-processResources {
-    rename '(.+_at.cfg)', 'META-INF/$1'
-}
-
-sourceSets {
-    main {
-        blossom {
-            javaSources {
-                property('mod_id', mod_id)
-                property('mod_name', mod_name)
-                property('mod_version', mod_version)
-                property('package', "${root_package}.${mod_id}")
-            }
-            resources {
-                property('mod_id', mod_id)
-                property('mod_name', mod_name)
-                property('mod_version', mod_version)
-                property('mod_description', mod_description)
-                property('mod_authors', mod_authors.toString().split(',').findAll { !it.isBlank() }.collect { "\"${it.strip()}\"" }.join(', '))
-                property('mod_credits', mod_credits)
-                property('mod_url', mod_url)
-                property('mod_update_json', mod_update_json)
-                property('mod_logo_path', mod_logo_path)
-            }
-        }
-    }
-}
-
-idea {
-    module {
-        inheritOutputDirs = true
-    }
-    project {
-        settings {
-            runConfigurations {
-                '1. Build'(Gradle) {
-                    taskNames = ["build"]
-                }
-                '2. Run Client'(Gradle) {
-                    taskNames = ["runClient"]
-                }
-                '3. Run Server'(Gradle) {
-                    taskNames = ["runServer"]
-                }
-            }
-            compiler.javac {
-                afterEvaluate {
-                    javacAdditionalOptions = '-encoding utf8'
-                    moduleJavacAdditionalOptions = [
-                            (project.name + '.main'): tasks.compileJava.options.compilerArgs.collect { "\"${it}\"" }.join(' ')
-                    ]
-                }
-            }
-        }
-    }
-}
 
 if (!enable_shadow.toBoolean()) {
     shadowJar.enabled = false
 }
 
 compileJava {
-    sourceCompatibility = targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = targetCompatibility = JavaVersion.VERSION_25
 }
 
 jar {
@@ -182,7 +173,8 @@ jar {
     doFirst {
         manifest {
             def attribute_map = [:]
-            attribute_map['ModType'] = "CRL"
+            attribute_map['ModType'] = 'CRL'
+            attribute_map['MixinConfigs'] = 'mixins.betterportals.json,mixins.betterportals.transition.json,mixins.betterportals.view.json'
             if (configurations.contain.size() > 0) {
                 attribute_map['ContainedDeps'] = configurations.contain.collect { it.name }.join(' ')
                 attribute_map['NonModDeps'] = true

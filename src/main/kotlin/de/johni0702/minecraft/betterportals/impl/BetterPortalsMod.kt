@@ -11,6 +11,7 @@ import de.johni0702.minecraft.betterportals.impl.transition.common.initTransitio
 import de.johni0702.minecraft.betterportals.impl.travelhuts.common.initTravelHuts
 import de.johni0702.minecraft.betterportals.impl.vanilla.common.initVanilla
 import de.johni0702.minecraft.view.common.ViewAPI
+import de.johni0702.minecraft.view.impl.MOD_ID
 import de.johni0702.minecraft.view.impl.ViewAPIImpl
 import de.johni0702.minecraft.view.impl.common.initView
 import net.minecraft.block.Block
@@ -37,7 +38,7 @@ const val MOD_ID = "betterportals"
 lateinit var LOGGER: Logger
 
 @Mod(modid = MOD_ID, useMetadata = true)
-internal class BetterPortalsMod: ViewAPI by ViewAPIImpl, BetterPortalsAPI by BetterPortalsAPIImpl {
+object BetterPortalsMod: ViewAPI by ViewAPIImpl, BetterPortalsAPI by BetterPortalsAPIImpl {
 
     internal val clientPreInitCallbacks = mutableListOf<() -> Unit>()
     internal val commonInitCallbacks = mutableListOf<() -> Unit>()
@@ -135,7 +136,6 @@ internal class BetterPortalsMod: ViewAPI by ViewAPIImpl, BetterPortalsAPI by Bet
 
     @Mod.EventHandler
     fun preInit(event: FMLPreInitializationEvent) {
-        INSTANCE = this
         LOGGER = event.modLog
         PROXY.preInit(this)
 
@@ -169,11 +169,11 @@ internal class BetterPortalsMod: ViewAPI by ViewAPIImpl, BetterPortalsAPI by Bet
         override fun preInit(mod: BetterPortalsMod) {}
 
         override fun init(mod: BetterPortalsMod) {
-            BetterPortalsMod.INSTANCE.commonInitCallbacks.forEach { it() }
+            commonInitCallbacks.forEach { it() }
         }
 
         override fun postInit(mod: BetterPortalsMod) {
-            BetterPortalsMod.INSTANCE.commonPostInitCallbacks.forEach { it() }
+            commonPostInitCallbacks.forEach { it() }
         }
     }
 
@@ -207,23 +207,20 @@ internal class BetterPortalsMod: ViewAPI by ViewAPIImpl, BetterPortalsAPI by Bet
         }
 
         override fun preInit(mod: BetterPortalsMod) {
-            BetterPortalsMod.INSTANCE.clientPreInitCallbacks.forEach { it() }
+            clientPreInitCallbacks.forEach { it() }
         }
 
         override fun init(mod: BetterPortalsMod) {
-            BetterPortalsMod.INSTANCE.clientInitCallbacks.forEach { it() }
+            clientInitCallbacks.forEach { it() }
             super.init(mod)
         }
 
         override fun postInit(mod: BetterPortalsMod) {
             super.postInit(mod)
-            BetterPortalsMod.INSTANCE.clientPostInitCallbacks.forEach { it() }
+            clientPostInitCallbacks.forEach { it() }
         }
     }
 
-    companion object {
-        @SidedProxy
-        lateinit var PROXY: Proxy
-        lateinit var INSTANCE: BetterPortalsMod
-    }
+    @SidedProxy(modId = MOD_ID, serverSide = "de.johni0702.minecraft.betterportals.impl.BetterPortalsMod.ServerProxy", clientSide = "de.johni0702.minecraft.betterportals.impl.BetterPortalsMod.ClientProxy")
+    lateinit var PROXY: Proxy
 }

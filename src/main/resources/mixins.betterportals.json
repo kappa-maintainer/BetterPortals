@@ -1,0 +1,21 @@
+{
+  "required": true,
+  "package": "de.johni0702.minecraft.betterportals.impl.mixin",
+  "plugin": "de.johni0702.minecraft.betterportals.impl.BetterPortalsMixinConfigPlugin",
+  "mixins": [
+    "MixinEntity",
+    "MixinTileEntityEndGateway",
+    "MixinWorld"
+  ],
+  "server": [],
+  "client": [
+    "AccessorEntityRenderer_VC",
+    "MixinEntityPlayerSP",
+    "MixinEntityRenderer",
+    "MixinJsonBlendingMode",
+    "MixinRenderManager",
+    "MixinSoundManager"
+  ],
+  "compatibilityLevel": "JAVA_25",
+  "minVersion": "0.8.7"
+}
