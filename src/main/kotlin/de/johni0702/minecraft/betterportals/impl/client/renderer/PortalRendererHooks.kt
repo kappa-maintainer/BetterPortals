@@ -2,6 +2,7 @@ package de.johni0702.minecraft.betterportals.impl.client.renderer
 
 import de.johni0702.minecraft.betterportals.client.render.portalDetail
 import de.johni0702.minecraft.betterportals.common.*
+import de.johni0702.minecraft.betterportals.common.entity.AbstractPortalEntity
 import de.johni0702.minecraft.betterportals.impl.client.glClipPlane
 import de.johni0702.minecraft.view.client.render.renderPassManager
 import net.minecraft.client.Minecraft
@@ -18,7 +19,7 @@ internal object PortalRendererHooks {
     private val currentRenderPass get() = Minecraft.getMinecraft().renderPassManager.current
 
     fun beforeRender(entity: Entity): Boolean {
-        if (entity is Portal) return true
+        if (entity is AbstractPortalEntity) return true
         if (!entity.isAddedToWorld) return true // e.g. mobs rendered as part of tile entities (e.g. spawner)
         val lowestEntity = entity.lowestRidingEntity
         val entityAABB = generateSequence(entity) { it.ridingEntity }
@@ -95,7 +96,7 @@ internal object PortalRendererHooks {
     }
 
     fun afterRender(entity: Entity) {
-        if (entity is Portal) return
+        if (entity is AbstractPortalEntity) return
         if (!entity.isAddedToWorld) return // e.g. mobs rendered as part of tile entities (e.g. spawner)
         if (disableParentClippingStack.removeAt(disableParentClippingStack.size - 1)) {
             GL11.glEnable(GL11.GL_CLIP_PLANE5)

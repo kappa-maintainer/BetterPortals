@@ -42,7 +42,7 @@ dependencies {
 
     modImplementation ('curse.maven:travelhut-255576:2629517')
 
-    modImplementation 'io.github.chaosunity.forgelin:Forgelin-Continuous:2.3.20.0'
+    modImplementation 'io.github.chaosunity.forgelin:Forgelin-Continuous:2.4.0.0'
     runtimeOnly 'org.jetbrains.kotlin:kotlin-reflect:2.3.21'
 
     // ========= Integration test dependencies =========
