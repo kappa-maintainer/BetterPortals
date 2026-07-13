@@ -43,7 +43,7 @@ import static de.johni0702.minecraft.view.impl.ViewAPIImplKt.getWorldsManagerImp
 public abstract class MixinPlayerCubeMap_CC extends PlayerChunkMap {
     @Shadow(remap = false) protected abstract CubeWatcher getOrCreateCubeWatcher(@Nonnull CubePos cubePos);
 
-    @Shadow(remap = false) protected abstract void setNeedSort();
+    //@Shadow(remap = false) protected abstract void setNeedSort();
 
     @Shadow(remap = false) @Final private ChunkGc chunkGc;
 
@@ -147,7 +147,7 @@ public abstract class MixinPlayerCubeMap_CC extends PlayerChunkMap {
         if (worldManager.getNeedsUpdate()) {
             worldManager.updateTrackedColumnsAndCubes(this::invokeGetOrCreateColumnWatcher, this::getOrCreateCubeWatcher);
             worldManager.setNeedsUpdate(false);
-            this.setNeedSort();
+            //this.setNeedSort();
             this.chunkGc.tick();
         }
     }
