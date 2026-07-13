@@ -11,10 +11,11 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import io.github.opencubicchunks.cubicchunks.core.server.ColumnWatcher;
 
 import java.util.List;
 
-@Mixin(targets = "io.github.opencubicchunks.cubicchunks.core.server.ColumnWatcher", remap = false)
+@Mixin(ColumnWatcher.class)
 public abstract class MixinColumnWatcher_CC extends PlayerChunkMapEntry {
     public MixinColumnWatcher_CC(PlayerChunkMap mapIn, int chunkX, int chunkZ) {
         super(mapIn, chunkX, chunkZ);
@@ -22,7 +23,7 @@ public abstract class MixinColumnWatcher_CC extends PlayerChunkMapEntry {
 
     @Shadow protected abstract List<EntityPlayerMP> getPlayers();
 
-    @Inject(method = "removePlayer", at = @At("HEAD"), cancellable = true, remap = true)
+    @Inject(method = "func_187277_b", at = @At("HEAD"), cancellable = true, remap = true) //removePlayer
     private void suppressRemoveDuringViewSwap(EntityPlayerMP player, CallbackInfo ci) {
         if (!PlayerCubeMapHandler.INSTANCE.getSwapInProgress()) {
             return;
@@ -34,7 +35,7 @@ public abstract class MixinColumnWatcher_CC extends PlayerChunkMapEntry {
         }
     }
 
-    @Inject(method = "addPlayer", at = @At("HEAD"), cancellable = true, remap = true)
+    @Inject(method = "func_187276_a", at = @At("HEAD"), cancellable = true, remap = true) //addPlayer
     private void suppressAddDuringViewSwap(EntityPlayerMP player, CallbackInfo ci) {
         if (!PlayerCubeMapHandler.INSTANCE.getSwapInProgress()) {
             return;

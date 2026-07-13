@@ -43,7 +43,7 @@ import static de.johni0702.minecraft.view.impl.ViewAPIImplKt.getWorldsManagerImp
 public abstract class MixinPlayerCubeMap_CC extends PlayerChunkMap {
     @Shadow(remap = false) protected abstract CubeWatcher getOrCreateCubeWatcher(@Nonnull CubePos cubePos);
 
-    @Shadow(remap = false) protected abstract void setNeedSort();
+    //@Shadow(remap = false) protected abstract void setNeedSort();
 
     @Shadow(remap = false) @Final private ChunkGc chunkGc;
 
@@ -81,7 +81,7 @@ public abstract class MixinPlayerCubeMap_CC extends PlayerChunkMap {
 
     public MixinPlayerCubeMap_CC(WorldServer serverWorld) { super(serverWorld); }
 
-    @Redirect(method = "addPlayer", at = @At(value = "INVOKE", target = "Ljava/util/List;contains(Ljava/lang/Object;)Z", remap = false))
+    @Redirect(method = "func_72683_a", at = @At(value = "INVOKE", target = "Ljava/util/List;contains(Ljava/lang/Object;)Z", remap = false)) //addPlayer
     private boolean forceAddDuringSwap(List list, Object o) {
         if (PlayerCubeMapHandler.INSTANCE.getSwapInProgress()) {
             return true;
@@ -91,12 +91,12 @@ public abstract class MixinPlayerCubeMap_CC extends PlayerChunkMap {
     }
 
     private EntityPlayerMP player;
-    @Inject(method = {"addPlayer", "removePlayer", "updateMovingPlayer"}, at = @At("HEAD"))
+    @Inject(method = {"func_72683_a", "func_72695_c", "func_72685_d"}, at = @At("HEAD")) //addPlayer, removePlayer, updateMovingPlayer
     private void recordPlayerArgument(EntityPlayerMP player, CallbackInfo ci) {
         this.player = player;
     }
 
-    @Redirect(method = "addPlayer", at = @At(value = "INVOKE", target = "Lio/github/opencubicchunks/cubicchunks/core/visibility/CubeSelector;forAllVisibleFrom(Lio/github/opencubicchunks/cubicchunks/api/util/CubePos;IILjava/util/function/Consumer;)V", remap = false))
+    @Redirect(method = "func_72683_a", at = @At(value = "INVOKE", target = "Lio/github/opencubicchunks/cubicchunks/core/visibility/CubeSelector;forAllVisibleFrom(Lio/github/opencubicchunks/cubicchunks/api/util/CubePos;IILjava/util/function/Consumer;)V", remap = false)) //addPlayer
     private void addPlayerWithViews(CubeSelector self, CubePos playerPos, int horizontalViewDist, int verticalViewDist, Consumer<CubePos> func) {
         ServerWorldsManagerImpl worldsManager = getWorldsManagerImpl(player);
         ServerWorldManager worldManager = worldsManager.getWorldManagers().get(getWorldServer());
@@ -115,7 +115,7 @@ public abstract class MixinPlayerCubeMap_CC extends PlayerChunkMap {
         }
     }
 
-    @Redirect(method = "removePlayer", at = @At(value = "INVOKE", target = "Lio/github/opencubicchunks/cubicchunks/core/visibility/CubeSelector;forAllVisibleFrom(Lio/github/opencubicchunks/cubicchunks/api/util/CubePos;IILjava/util/function/Consumer;)V", remap = false))
+    @Redirect(method = "func_72695_c", at = @At(value = "INVOKE", target = "Lio/github/opencubicchunks/cubicchunks/core/visibility/CubeSelector;forAllVisibleFrom(Lio/github/opencubicchunks/cubicchunks/api/util/CubePos;IILjava/util/function/Consumer;)V", remap = false)) //removePlayer
     private void removePlayerWithViews(CubeSelector self, CubePos playerPos, int horizontalViewDist, int verticalViewDist, Consumer<CubePos> func) {
         ServerWorldsManagerImpl worldsManager = getWorldsManagerImpl(player);
         ServerWorldManager worldManager = worldsManager.getWorldManagers().get(getWorldServer());
@@ -141,13 +141,13 @@ public abstract class MixinPlayerCubeMap_CC extends PlayerChunkMap {
         ci.cancel();
     }
 
-    @Inject(method = "updateMovingPlayer", at = @At("RETURN"))
+    @Inject(method = "func_72685_d", at = @At("RETURN")) //updateMovingPlayer
     private void updateTrackedColumnsAndCubes(EntityPlayerMP player, CallbackInfo ci) {
         ServerWorldManager worldManager = getWorldsManagerImpl(player).getWorldManagers().get(getWorldServer());
         if (worldManager.getNeedsUpdate()) {
             worldManager.updateTrackedColumnsAndCubes(this::invokeGetOrCreateColumnWatcher, this::getOrCreateCubeWatcher);
             worldManager.setNeedsUpdate(false);
-            this.setNeedSort();
+            //this.setNeedSort();
             this.chunkGc.tick();
         }
     }

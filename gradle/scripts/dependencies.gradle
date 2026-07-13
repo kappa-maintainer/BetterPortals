@@ -2,10 +2,6 @@ repositories {
     // Other repositories described by default:
     // CleanroomMC: https://maven.cleanroommc.com
     maven {
-        name = 'CurseMaven'
-        url = 'https://cursemaven.com'
-    }
-    maven {
         name = 'CleanroomCurseMaven'
         url = 'https://curse.cleanroommc.com'
     }
@@ -27,7 +23,7 @@ dependencies {
         compileOnly "com.cleanroommc:lwjglx:1.0.0"
     }
 
-    modCompileOnly ('curse.maven:opencubicchunks-292243:5135427')
+    modCompileOnly fileTree(dir: 'libs', include: '*.jar')
 
     modImplementation ('curse.maven:the-twilight-forest-deforestation-edition-1063334:7846443')
 
