@@ -148,9 +148,9 @@ internal class ViewRenderManager : RenderPassManager {
         mc.mcProfiler.endStartSection("determineRootRenderPass")
 
         // Build render plan
-        var plan = with(DetermineRootPassEvent(this, partialTicks, view.world, camera).post()) {
-            ViewRenderPlan(this@ViewRenderManager, null, this.world, this.camera)
-        }
+        val rootEvent = DetermineRootPassEvent(this, partialTicks, view.world, camera).post()
+        var plan = ViewRenderPlan(this@ViewRenderManager, null, rootEvent.world, rootEvent.camera)
+        rootEvent.copyDetailsTo(plan)
 
         mc.mcProfiler.endStartSection("populateRenderPassTree")
 
@@ -317,7 +317,11 @@ internal class ViewRenderPlan(
     }
 
     override fun <T> set(type: Class<T>, detail: T?) {
-        details[type] = detail as Any
+        if (detail == null) {
+            details.remove(type)
+        } else {
+            details[type] = detail
+        }
     }
 
     @Suppress("UNCHECKED_CAST")

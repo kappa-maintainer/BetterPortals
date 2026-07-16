@@ -17,6 +17,14 @@ repositories {
         name = 'Modrinth'
         url = 'https://api.modrinth.com/maven'
     }
+    maven {
+        name = 'Outlands'
+        url = 'https://maven.outlands.top/releases'
+        content {
+            includeGroup('org.embeddedt')
+            includeGroupAndSubgroups('org.embeddedt.celeritas')
+        }
+    }
     mavenCentral()
     mavenLocal() // Must be last for caching to work
 }
@@ -28,6 +36,13 @@ dependencies {
     }
 
     modCompileOnly ('curse.maven:opencubicchunks-292243:5135427')
+    def celeritasVersion = '2.4.0-autobuild.fadd0c40'
+    compileOnly("org.embeddedt:celeritas-forge-mc12.2:$celeritasVersion") {
+        transitive = false
+    }
+    compileOnly("org.embeddedt.celeritas:celeritas-common:$celeritasVersion") {
+        transitive = false
+    }
 
     modImplementation ('curse.maven:the-twilight-forest-deforestation-edition-1063334:7846443')
 

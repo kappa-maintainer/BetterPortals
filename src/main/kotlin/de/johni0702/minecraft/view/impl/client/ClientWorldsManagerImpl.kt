@@ -50,6 +50,7 @@ internal class ClientWorldsManagerImpl : ClientWorldsManager {
 
     var activeView = mainView
     private var inUpdate = false
+    private var viewDiagnosticsTicks = 0
 
     val serverMainView
         get() = unconfirmedChanges.firstOrNull()?.old ?: mainView
@@ -117,11 +118,15 @@ internal class ClientWorldsManagerImpl : ClientWorldsManager {
     fun createState(world: WorldClient): ClientState {
         val dim = world.provider.dimension
         check(views.find { it.world.provider.dimension == dim } == null) { "World with dimension $dim already exists" }
-        return ClientState.reuseOrCreate(this, world, unusedViews.popOrNull()).also { views.add(it) }
+        // Celeritas destroys a render section manager's workers when its world is unloaded. Reusing that RenderGlobal
+        // then stops the main view's vanilla dispatcher and can block while creating the replacement view.
+        val oldView = if (CeleritasViewDiagnostics.isAvailable) null else unusedViews.popOrNull()
+        return ClientState.reuseOrCreate(this, world, oldView).also { views.add(it) }
     }
 
     fun destroyState(view: ClientState) {
         LOGGER.debug("Removing view {}", view)
+        CeleritasViewDiagnostics.log(view, "destroying")
         if (activeView != mainView) throw IllegalStateException("Main view must be active")
         if (view == mainView) throw IllegalArgumentException("Cannot remove main view")
 
@@ -132,7 +137,9 @@ internal class ClientWorldsManagerImpl : ClientWorldsManager {
 
         check(views.remove(view)) { "Unknown view $view" }
         view.isValid = false
-        unusedViews.add(view)
+        if (!CeleritasViewDiagnostics.isAvailable) {
+            unusedViews.add(view)
+        }
     }
 
     fun handleWorldData(dimensionId: Int, data: ByteBuf) {
@@ -312,9 +319,13 @@ internal class ClientWorldsManagerImpl : ClientWorldsManager {
 
         mc.mcProfiler.startSection("tickViews")
 
+        val logDiagnostics = ++viewDiagnosticsTicks % 20 == 0
         views.filter { it != mainView }.forEach { view ->
             withView(view) {
                 tickView()
+                if (logDiagnostics) {
+                    CeleritasViewDiagnostics.log(view, "tick")
+                }
             }
         }
 

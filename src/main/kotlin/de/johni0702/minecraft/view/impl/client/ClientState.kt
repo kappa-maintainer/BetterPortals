@@ -207,6 +207,7 @@ internal class ClientState(
             val view: ClientState
             if (oldView == null) {
                 LOGGER.debug("Creating new view")
+                CeleritasViewDiagnostics.logInitialization(world, "components-start")
                 view = ClientState(manager, world, camera, channel, networkManager)
 
             } else {
@@ -225,23 +226,32 @@ internal class ClientState(
                     view.itemRenderer = ItemRenderer(mc)
                     mc.itemRenderer = view.itemRenderer // Implicitly passed to EntityRenderer via mc
                     view.renderGlobal = RenderGlobal(mc)
+                    CeleritasViewDiagnostics.logInitialization(world, "render-global-created")
                     mc.renderGlobal = view.renderGlobal
                     view.entityRenderer = EntityRenderer(mc, mc.resourceManager)
+                    CeleritasViewDiagnostics.logInitialization(world, "entity-renderer-created")
                     mc.entityRenderer = view.entityRenderer
                     view.particleManager = ParticleManager(world, mc.textureManager)
                     mc.effectRenderer = view.particleManager
                 }
 
                 with (mc.renderGlobal) {
-                    if (renderDispatcher != null) {
-                        renderDispatcher.stopWorkerThreads()
+                    if (!CeleritasViewDiagnostics.isAvailable) {
+                        if (renderDispatcher != null) {
+                            CeleritasViewDiagnostics.logInitialization(world, "dispatcher-stop-start")
+                            renderDispatcher.stopWorkerThreads()
+                            CeleritasViewDiagnostics.logInitialization(world, "dispatcher-stop-complete")
+                        }
+                        renderDispatcher = manager.mainView.renderGlobal!!.renderDispatcher
                     }
-                    renderDispatcher = manager.mainView.renderGlobal!!.renderDispatcher
+                    CeleritasViewDiagnostics.logInitialization(world, "set-world-start")
                     setWorldAndLoadRenderers(world)
+                    CeleritasViewDiagnostics.logInitialization(world, "set-world-complete")
                 }
                 mc.effectRenderer.clearEffects(world)
                 mc.ingameGUI.overlayBoss = GuiBossOverlay(mc)
             }
+            CeleritasViewDiagnostics.log(view, "created")
 
             return view
         }

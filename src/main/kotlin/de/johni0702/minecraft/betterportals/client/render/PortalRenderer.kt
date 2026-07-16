@@ -7,6 +7,7 @@ import de.johni0702.minecraft.betterportals.common.toFacing
 import de.johni0702.minecraft.view.client.ClientViewAPI
 import de.johni0702.minecraft.view.client.render.RenderPass
 import de.johni0702.minecraft.view.client.render.occlusionDetail
+import de.johni0702.minecraft.view.impl.compat.celeritas.CeleritasTerrainDetail
 import net.minecraft.client.Minecraft
 import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.client.shader.Framebuffer
@@ -76,7 +77,13 @@ abstract class PortalRenderer<in P: Portal> {
         val occlusionQuery = portalPass?.occlusionDetail?.occlusionQuery
         occlusionQuery?.begin()
 
-        renderPortal(portal, pos, portalPass?.framebuffer, renderPass)
+        val terrainDetail = portalPass?.get(CeleritasTerrainDetail::class.java)
+        val framebuffer = if (terrainDetail == null || terrainDetail.isReady || terrainDetail.isTimedOut) {
+            portalPass?.framebuffer
+        } else {
+            null
+        }
+        renderPortal(portal, pos, framebuffer, renderPass)
 
         occlusionQuery?.end()
     }

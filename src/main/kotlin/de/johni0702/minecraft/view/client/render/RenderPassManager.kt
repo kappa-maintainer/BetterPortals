@@ -49,13 +49,36 @@ class DetermineRootPassEvent(
         world: WorldClient,
         var camera: Camera
 ) : Event() {
+    private val details = mutableMapOf<Class<*>, Any>()
+
     var world = world
         set(value) {
             val worldsManager = Minecraft.getMinecraft().worldsManager
             require(world in worldsManager!!.worlds) { "Unknown world $world" }
             field = value
         }
+
+    operator fun <T> set(type: Class<T>, detail: T?) {
+        if (detail == null) {
+            details.remove(type)
+        } else {
+            details[type] = detail
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    operator fun <T> get(type: Class<T>): T? = details[type] as T?
+
+    internal fun copyDetailsTo(renderPass: RenderPass) {
+        details.forEach { (type, detail) ->
+            @Suppress("UNCHECKED_CAST")
+            renderPass[type as Class<Any>] = detail
+        }
+    }
 }
+
+inline fun <reified T> DetermineRootPassEvent.get(): T? = get(T::class.java)
+inline fun <reified T> DetermineRootPassEvent.set(detail: T?) = set(T::class.java, detail)
 
 /**
  * Emitted to populate the render pass tree, i.e. add more passes where required.

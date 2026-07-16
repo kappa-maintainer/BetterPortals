@@ -1,10 +1,12 @@
 package de.johni0702.minecraft.betterportals.impl.client.renderer
 
 import de.johni0702.minecraft.betterportals.common.*
-import net.minecraft.client.renderer.culling.ClippingHelper
+import net.minecraft.client.renderer.culling.ClippingHelperImpl
 import net.minecraft.client.renderer.culling.Frustum
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.math.Vec3d
+
+private const val PORTAL_APERTURE_EPSILON = 0.0001
 
 /**
  * Camera which looks at the current world through a portal.
@@ -14,8 +16,9 @@ internal class PortalCamera(
         private val pos: Vec3d,
         private val inner: Frustum
 // Note: we **MUST NOT** use the no-args constructor of Frustum since it breaks the global clipping helper
-): Frustum(ClippingHelper()) {
+): Frustum(ClippingHelperImpl().apply { init() }) {
     private val portalPlanes: Array<DoubleArray> = Array(4) { DoubleArray(4) }
+    private var usePortalPlanes = true
 
     /**
      * The reason why we re-write this is method instead of using [ClippingHelper] is quite complicated.
@@ -51,6 +54,15 @@ internal class PortalCamera(
 
         // Note: cannot use x,y,z for pos because those are player pos, not camera pos (i.e. feet, not eye level)
 
+        val portalCenter = portal.remotePosition.to3dMid()
+        // A portal frustum has no volume when its apex lies on the aperture plane. Let the ordinary frustum handle
+        // this narrow crossing interval; the remote terrain clip plane still removes the invalid side.
+        if (kotlin.math.abs(portalCenter[portal.remoteAxis] - pos[portal.remoteAxis]) < PORTAL_APERTURE_EPSILON) {
+            usePortalPlanes = false
+            return
+        }
+        usePortalPlanes = true
+
         // The (local) direction from which we're looking into the portal
         // i.e. nothing which is in this direction is visible (because it'd be in the remote world)
         val viewFacing = portal.remoteFacing.axis.toFacing(portal.remotePosition.to3dMid() - pos)
@@ -81,7 +93,7 @@ internal class PortalCamera(
     }
 
     override fun isBoxInFrustum(minX: Double, minY: Double, minZ: Double, maxX: Double, maxY: Double, maxZ: Double): Boolean {
-        return isBoxInPortalFrustum(minX, minY, minZ, maxX, maxY, maxZ)
+        return (!usePortalPlanes || isBoxInPortalFrustum(minX, minY, minZ, maxX, maxY, maxZ))
                 && inner.isBoxInFrustum(minX, minY, minZ, maxX, maxY, maxZ)
     }
 }

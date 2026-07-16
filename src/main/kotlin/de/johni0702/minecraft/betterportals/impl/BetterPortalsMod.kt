@@ -6,7 +6,6 @@ import de.johni0702.minecraft.betterportals.impl.common.initPortal
 import de.johni0702.minecraft.betterportals.impl.transition.common.initTransition
 import de.johni0702.minecraft.betterportals.impl.vanilla.common.initVanilla
 import de.johni0702.minecraft.view.common.ViewAPI
-import de.johni0702.minecraft.view.impl.MOD_ID
 import de.johni0702.minecraft.view.impl.ViewAPIImpl
 import de.johni0702.minecraft.view.impl.common.initView
 import net.minecraft.block.Block

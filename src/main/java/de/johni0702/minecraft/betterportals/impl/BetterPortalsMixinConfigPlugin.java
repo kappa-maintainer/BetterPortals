@@ -18,6 +18,7 @@ public class BetterPortalsMixinConfigPlugin implements IMixinConfigPlugin {
     private boolean hasCC = Launch.classLoader.getClassBytes("io.github.opencubicchunks.cubicchunks.core.asm.coremod.CubicChunksCoreMod") != null;
     private boolean hasSponge = Launch.classLoader.getClassBytes("org.spongepowered.common.SpongePlatform") != null;
     private boolean hasVC = Launch.classLoader.getClassBytes("org.vivecraft.asm.VivecraftASMTransformer") != null;
+    private boolean hasCeleritas = Launch.classLoader.getClassBytes("org.taumc.celeritas.CeleritasVintage") != null;
     private boolean vcVR = hasVC && Launch.classLoader.getClassBytes("org.vivecraft.provider.MCOpenVR") != null;
     private boolean vcNonVR = hasVC && !vcVR;
 
@@ -30,11 +31,17 @@ public class BetterPortalsMixinConfigPlugin implements IMixinConfigPlugin {
         logger.debug("hasCC: " + hasCC);
         logger.debug("hasSponge: " + hasSponge);
         logger.debug("hasVC: " + hasVC + " (VR: " + vcVR + ")");
+        logger.debug("hasCeleritas: " + hasCeleritas);
     }
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
         if (!hasKotlin) return false;
+        if (hasCeleritas && isCeleritasIncompatibleTerrainMixin(mixinClassName)) {
+            logger.info("Skipping {} because Celeritas owns RenderGlobal terrain rendering", mixinClassName);
+            return false;
+        }
+        if (mixinClassName.endsWith("_Celeritas")) return hasCeleritas;
         if (vcVR) {
             if (mixinClassName.endsWith("MixinEntityRenderer_NoOF")) {
                 return true;
@@ -58,6 +65,16 @@ public class BetterPortalsMixinConfigPlugin implements IMixinConfigPlugin {
         if (mixinClassName.endsWith("_VC")) return vcVR;
         if (mixinClassName.endsWith("_NoVC")) return !vcVR;
         return true;
+    }
+
+    private boolean isCeleritasIncompatibleTerrainMixin(String mixinClassName) {
+        return mixinClassName.endsWith("view.impl.mixin.MixinRenderGlobal")
+                || mixinClassName.endsWith("view.impl.mixin.MixinChunkCompileTaskGenerator")
+                || mixinClassName.endsWith("view.impl.mixin.MixinChunkRenderWorker")
+                || mixinClassName.endsWith("view.impl.mixin.MixinRenderChunk")
+                || mixinClassName.endsWith("view.impl.mixin.MixinRenderChunk_OF")
+                || mixinClassName.endsWith("view.impl.mixin.MixinViewFrustum")
+                || mixinClassName.endsWith("view.impl.mixin.MixinViewFrustum_OF");
     }
 
     @Override

@@ -2,6 +2,7 @@ package de.johni0702.minecraft.betterportals.impl.client.renderer
 
 import de.johni0702.minecraft.betterportals.client.render.PortalDetail
 import de.johni0702.minecraft.betterportals.client.render.PortalFogDetail
+import de.johni0702.minecraft.betterportals.client.render.TransformedRootDetail
 import de.johni0702.minecraft.betterportals.client.render.portalDetail
 import de.johni0702.minecraft.betterportals.client.render.portalFogDetail
 import de.johni0702.minecraft.betterportals.common.*
@@ -39,6 +40,7 @@ internal object PortalRenderManager {
         var camera = event.camera
         val viewEntity = mc.renderViewEntity ?: mc.player
         val vehicle = viewEntity.lowestRidingEntity
+        var lastCrossedAgent: PortalAgent<*>? = null
         val vehicleSyncPos = vehicle.syncPos + vehicle.eyeOffset
         val vehicleClientPos = vehicle.pos + vehicle.eyeOffset
         // Note: must not use prevPos (or by extension getPositionEyes) since EntityMinecraft completely breaks it
@@ -53,10 +55,8 @@ internal object PortalRenderManager {
             if (loaded.toList().isEmpty()) break
             val hitInfo = loaded.flatMap { agent ->
                 val portal = agent.portal
-
                 // Ignore portals which haven't yet been loaded
                 agent.remoteAgent ?: return@flatMap listOf<Pair<Pair<PortalAgent<*>, Vec3d>, Double>>()
-
                 // Ignore currently invisible one-way portals
                 if (agent is PortalAgent.OneWay) {
                     if (agent.isTailEnd && !agent.isTailEndVisible) {
@@ -84,7 +84,7 @@ internal object PortalRenderManager {
             if (hitInfo != null) {
                 val (agent, hitVec) = hitInfo
                 val portal = agent.portal
-
+                lastCrossedAgent = agent
                 // If we hit a portal, switch to its view and transform the camera/entity positions accordingly
                 // also change the current position to be in the portal so we don't accidentally match any portals
                 // behind the one we're looking through.
@@ -117,6 +117,10 @@ internal object PortalRenderManager {
 
         event.camera = camera
         event.world = world
+        lastCrossedAgent?.let {
+            event.set(TransformedRootDetail::class.java, TransformedRootDetail(it))
+            event.set(ChunkVisibilityDetail::class.java, ChunkVisibilityDetail(it.portal.remotePosition))
+        }
     }
 
     @SubscribeEvent
@@ -144,7 +148,6 @@ internal object PortalRenderManager {
             it.remoteAgent ?: return@forEach
             // it must not be our parent (the portal from which this world is being viewed)
             if (parentPortal?.isTarget(portal) == true) return@forEach
-
             val childPreviousFrame = previousFrame?.children?.find { it.portalDetail?.parent == portal }
 
             val childCamera = camera.transformed(portal.localToRemoteMatrix).let {
@@ -228,7 +231,7 @@ internal object PortalRenderManager {
             // planePos however is currently absolute world space, so we need to convert it
             val relPlanePos = planePos - camera.feetPosition
             glClipPlane(GL11.GL_CLIP_PLANE5, cameraSide.directionVec.to3d().scale(-1.0), relPlanePos)
-            GL11.glEnable(GL11.GL_CLIP_PLANE5) // FIXME don't hard-code clipping plane id
+            // Diagnostic: leave the portal clip plane disabled to isolate Celeritas terrain clipping failures.
 
             // Reduce fog by distance between camera and portal, we will later re-apply this distance worth of fog
             // to the rendered portal but then with the fog of the correct dimension.

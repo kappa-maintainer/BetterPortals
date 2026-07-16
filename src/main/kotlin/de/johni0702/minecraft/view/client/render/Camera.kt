@@ -2,11 +2,36 @@ package de.johni0702.minecraft.view.client.render
 
 import de.johni0702.minecraft.betterportals.common.*
 import net.minecraft.client.renderer.EntityRenderer
-import net.minecraft.client.renderer.culling.ClippingHelper
+import net.minecraft.client.renderer.culling.ClippingHelperImpl
 import net.minecraft.client.renderer.culling.Frustum
 import net.minecraft.util.math.Vec3d
 import javax.vecmath.Matrix4d
 import javax.vecmath.Point3d
+
+internal class TransformedFrustum(
+        private val inner: Frustum,
+        private val inverseMatrix: Matrix4d
+) : Frustum(ClippingHelperImpl().apply { init() }) {
+    override fun setPosition(xIn: Double, yIn: Double, zIn: Double) {
+        with(inverseMatrix * Point3d(xIn, yIn, zIn)) {
+            inner.setPosition(x, y, z)
+        }
+    }
+
+    override fun isBoxInFrustum(
+            minX: Double, minY: Double, minZ: Double,
+            maxX: Double, maxY: Double, maxZ: Double
+    ): Boolean {
+        val min = inverseMatrix * Point3d(minX, minY, minZ)
+        val max = inverseMatrix * Point3d(maxX, maxY, maxZ)
+        fun min(a: Double, b: Double) = if (a.isNaN() || b.isNaN()) Double.NEGATIVE_INFINITY else kotlin.math.min(a, b)
+        fun max(a: Double, b: Double) = if (a.isNaN() || b.isNaN()) Double.POSITIVE_INFINITY else kotlin.math.max(a, b)
+        return inner.isBoxInFrustum(
+                min(min.x, max.x), min(min.y, max.y), min(min.z, max.z),
+                max(min.x, max.x), max(min.y, max.y), max(min.z, max.z)
+        )
+    }
+}
 
 /**
  * A camera through which a view can be rendered.
@@ -69,30 +94,7 @@ class Camera(
         val rotation = matrix.toJX4f().toLwjgl3f().extractRotation()
         return Camera(
                 // Note: we **MUST NOT** use the no-args constructor of Frustum since it breaks the global clipping helper
-                object : Frustum(ClippingHelper()) {
-                    private val inverseMatrix = matrix.inverse()
-                    override fun setPosition(xIn: Double, yIn: Double, zIn: Double) {
-                        with(inverseMatrix * Point3d(xIn, yIn, zIn)) {
-                            frustum.setPosition(x, y, z)
-                        }
-                    }
-
-                    override fun isBoxInFrustum(
-                            minX: Double, minY: Double, minZ: Double,
-                            maxX: Double, maxY: Double, maxZ: Double
-                    ): Boolean {
-                        val min = inverseMatrix * Point3d(minX, minY, minZ)
-                        val max = inverseMatrix * Point3d(maxX, maxY, maxZ)
-                        // isBoxInFrustum doesn't deal properly with NaN values, see [PortalCamera.isBoxInPortalFrustum]
-                        // so we replaces those values with pos/neg infinity (because that's more or less what we mean).
-                        fun min(a: Double, b: Double) = if (a.isNaN() || b.isNaN()) Double.NEGATIVE_INFINITY else kotlin.math.min(a, b)
-                        fun max(a: Double, b: Double) = if (a.isNaN() || b.isNaN()) Double.POSITIVE_INFINITY else kotlin.math.max(a, b)
-                        return frustum.isBoxInFrustum(
-                                min(min.x, max.x), min(min.y, max.y), min(min.z, max.z),
-                                max(min.x, max.x), max(min.y, max.y), max(min.z, max.z)
-                        )
-                    }
-                },
+                TransformedFrustum(frustum, matrix.inverse()),
                 (matrix * feetPosition.toPoint()).toMC(),
                 (matrix * eyePosition.toPoint()).toMC(),
                 (matrix * viewPosition.toPoint()).toMC(),
