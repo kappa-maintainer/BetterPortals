@@ -11,6 +11,7 @@ import de.johni0702.minecraft.view.server.View
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
 import io.netty.channel.embedded.EmbeddedChannel
+import io.netty.util.ReferenceCountUtil
 import net.minecraft.entity.player.EntityPlayerMP
 import net.minecraft.network.*
 import net.minecraft.network.play.server.SPacketCustomPayload
@@ -223,7 +224,11 @@ internal class ServerWorldsManagerImpl(
     }
 
     private fun destroyWorldManager(manager: ServerWorldManager) {
-        if (!connection.netManager.isChannelOpen) return
+        val viewPlayer = manager.player as? ViewEntity
+        if (!connection.netManager.isChannelOpen) {
+            viewPlayer?.channel?.finishAndReleaseAll()
+            return
+        }
 
         // Flush packets before actually removing the world,
         // otherwise entities referencing the world (e.g. portals) might not yet have been removed on the client
@@ -235,6 +240,8 @@ internal class ServerWorldsManagerImpl(
         val world = manager.world
         world.removeEntity(player)
         world.playerChunkMap.removePlayer(player)
+        // Removing the view player generates packets for a world which the client has already discarded.
+        viewPlayer?.channel?.finishAndReleaseAll()
 
         check(worldManagers.remove(manager.world, manager)) { "unknown manager $manager" }
     }
@@ -246,6 +253,7 @@ internal class ServerWorldsManagerImpl(
             val player = manager.player as? ViewEntity ?: return@forEach
             world.removeEntity(player)
             world.playerChunkMap.removePlayer(player)
+            player.channel.finishAndReleaseAll()
             worldManagers.remove(world)
         }
     }
@@ -290,9 +298,37 @@ internal class ServerWorldsManagerImpl(
 
         // Flush view packets via main connection
         worldManagers.values.forEach { manager ->
-            (manager.player as? ViewEntity)?.channel?.outboundMessages()?.onEach {
-                WorldData(manager.world.provider.dimension, it as ByteBuf).sendTo(connection.player)
-            }?.clear()
+            val viewPlayer = manager.player as? ViewEntity ?: return@forEach
+            flushPackets(manager.world.provider.dimension, viewPlayer.channel)
+        }
+    }
+
+    private fun flushPackets(dimension: Int, channel: EmbeddedChannel) {
+        val messages = channel.outboundMessages()
+        try {
+            while (true) {
+                val outbound = messages.poll() ?: break
+                val data = outbound as? ByteBuf
+                if (data == null) {
+                    ReferenceCountUtil.release(outbound)
+                    throw IllegalStateException("Unexpected view packet type ${outbound.javaClass.name}")
+                }
+
+                val message = WorldData(dimension, data)
+                try {
+                    message.sendTo(connection.player)
+                } finally {
+                    // Forge normally consumes ReferenceCounted messages while encoding them. Only release here when
+                    // encoding failed before it took ownership.
+                    if (message.refCnt() > 0) {
+                        message.release()
+                    }
+                }
+            }
+        } finally {
+            while (true) {
+                ReferenceCountUtil.release(messages.poll() ?: break)
+            }
         }
     }
 
