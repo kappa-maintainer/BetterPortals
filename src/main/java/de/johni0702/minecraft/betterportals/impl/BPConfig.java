@@ -107,6 +107,10 @@ public class BPConfig {
     @Config.Comment("Show debug view instead of composed view. Client-side setting.")
     public static boolean debugView = false;
 
+    @Config.Name("Debug Logging")
+    @Config.Comment("Enable detailed Better Portals diagnostic logging. This may produce frequent log messages.")
+    public static boolean debugLogging = false;
+
     @SubscribeEvent
     public static void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
         if (MOD_ID.equals(event.getModID())) {

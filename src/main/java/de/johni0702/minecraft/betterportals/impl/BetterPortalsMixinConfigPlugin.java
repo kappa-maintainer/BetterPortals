@@ -38,7 +38,7 @@ public class BetterPortalsMixinConfigPlugin implements IMixinConfigPlugin {
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
         if (!hasKotlin) return false;
         if (hasCeleritas && isCeleritasIncompatibleTerrainMixin(mixinClassName)) {
-            logger.info("Skipping {} because Celeritas owns RenderGlobal terrain rendering", mixinClassName);
+            logger.debug("Skipping {} because Celeritas owns RenderGlobal terrain rendering", mixinClassName);
             return false;
         }
         if (mixinClassName.endsWith("_Celeritas")) return hasCeleritas;

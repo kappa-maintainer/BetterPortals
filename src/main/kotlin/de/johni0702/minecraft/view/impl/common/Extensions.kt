@@ -6,6 +6,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.ListenableFutureTask
 import de.johni0702.minecraft.view.impl.ClientViewAPIImpl
 import de.johni0702.minecraft.view.impl.LOGGER
+import de.johni0702.minecraft.view.impl.ViewDebug
 import de.johni0702.minecraft.view.impl.client.ViewDemuxingTaskQueue
 import de.johni0702.minecraft.view.impl.client.render.ViewRenderManager
 import de.johni0702.minecraft.view.impl.net.Net
@@ -17,8 +18,11 @@ import java.util.concurrent.Executors
 fun initView(
         init: (() -> Unit) -> Unit,
         clientInit: (() -> Unit) -> Unit,
-        debugView: () -> Boolean
+        debugView: () -> Boolean,
+        debugLogging: () -> Boolean
 ) {
+    ViewDebug.configure(debugLogging)
+
     init {
         Net.INSTANCE // initialize via <init>
     }

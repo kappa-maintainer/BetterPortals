@@ -2,6 +2,7 @@ package de.johni0702.minecraft.view.impl.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
+import de.johni0702.minecraft.view.impl.ViewDebug;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.embeddedt.embeddium.impl.gl.shader.ShaderType;
@@ -48,7 +49,9 @@ public abstract class MixinShaderChunkRenderer_Celeritas {
             return source;
         } else if (!betterportals$reportedClipSupport) {
             betterportals$reportedClipSupport = true;
-            betterportals$logger.info("Enabled BetterPortals clipping in the Celeritas terrain vertex shader");
+            if (ViewDebug.isEnabled()) {
+                betterportals$logger.debug("Enabled BetterPortals clipping in the Celeritas terrain vertex shader");
+            }
         }
         return clippedSource;
     }

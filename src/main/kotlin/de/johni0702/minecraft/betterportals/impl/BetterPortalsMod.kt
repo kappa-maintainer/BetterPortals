@@ -55,7 +55,8 @@ object BetterPortalsMod: ViewAPI by ViewAPIImpl, BetterPortalsAPI by BetterPorta
         initView(
                 init = { commonInitCallbacks.add(it) },
                 clientInit = { clientInitCallbacks.add(it) },
-                debugView = { BPConfig.debugView }
+                debugView = { BPConfig.debugView },
+                debugLogging = { BPConfig.debugLogging }
         )
 
         initTransition(

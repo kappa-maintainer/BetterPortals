@@ -2,13 +2,16 @@ package de.johni0702.minecraft.view.impl.client
 
 import de.johni0702.minecraft.view.impl.ClientViewAPIImpl
 import de.johni0702.minecraft.view.impl.LOGGER
+import de.johni0702.minecraft.view.impl.debugLog
 import io.netty.channel.ChannelHandlerContext
 import io.netty.util.concurrent.Future
 import io.netty.util.concurrent.GenericFutureListener
 import net.minecraft.network.EnumPacketDirection
 import net.minecraft.network.NetworkManager
 import net.minecraft.network.Packet
+import net.minecraft.network.play.client.CPacketConfirmTeleport
 import net.minecraft.network.play.client.CPacketKeepAlive
+import net.minecraft.network.play.client.CPacketPlayer
 import net.minecraft.network.play.server.SPacketChat
 
 /**
@@ -23,7 +26,7 @@ internal class ViewNetworkManager : NetworkManager(EnumPacketDirection.CLIENTBOU
         if (packetIn is CPacketKeepAlive || viewManager.activeView.isMainView) {
             // Send packet via main connection
             if (viewManager.serverMainView.netManager == this) {
-                println("rec")
+                debugLog { LOGGER.debug("Forwarding packet from the server main view: {}", packetIn) }
             }
             viewManager.serverMainView.netManager?.sendPacket(packetIn)
         } else {
@@ -32,6 +35,8 @@ internal class ViewNetworkManager : NetworkManager(EnumPacketDirection.CLIENTBOU
             )
             if (Thread.currentThread().stackTrace.any { it.className in knownBadSenders }) {
                 viewManager.serverMainView.netManager?.sendPacket(packetIn)
+            } else if (packetIn is CPacketConfirmTeleport || packetIn is CPacketPlayer) {
+                debugLog { LOGGER.debug("Dropping expected auxiliary view packet {}", packetIn.javaClass.name) }
             } else {
                 LOGGER.warn("Dropping packet {}", packetIn)
             }

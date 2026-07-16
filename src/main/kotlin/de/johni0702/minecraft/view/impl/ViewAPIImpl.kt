@@ -23,6 +23,23 @@ import org.apache.logging.log4j.LogManager
 internal val LOGGER = LogManager.getLogger("betterportals/view")
 internal const val MOD_ID = "bp-view"
 
+object ViewDebug {
+    private var enabled: () -> Boolean = { false }
+
+    fun configure(enabled: () -> Boolean) {
+        this.enabled = enabled
+    }
+
+    @JvmStatic
+    fun isEnabled(): Boolean = enabled()
+}
+
+internal inline fun debugLog(message: () -> Unit) {
+    if (ViewDebug.isEnabled()) {
+        message()
+    }
+}
+
 object ViewAPIImpl : ViewAPI {
     override val client: ClientViewAPI
         get() = ClientViewAPIImpl

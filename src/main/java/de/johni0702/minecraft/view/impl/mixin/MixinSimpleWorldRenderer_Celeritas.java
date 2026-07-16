@@ -8,6 +8,7 @@ import de.johni0702.minecraft.view.impl.compat.celeritas.CeleritasTerrainDetail;
 import de.johni0702.minecraft.view.impl.compat.celeritas.CeleritasViewportExt;
 import de.johni0702.minecraft.view.impl.compat.celeritas.CeleritasPassClassifier;
 import de.johni0702.minecraft.view.impl.client.render.ViewRenderManager;
+import de.johni0702.minecraft.view.impl.ViewDebug;
 import net.minecraft.util.math.BlockPos;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -127,11 +128,13 @@ public abstract class MixinSimpleWorldRenderer_Celeritas {
             manager.updateChunks(false);
             manager.uploadChunks();
             this.betterportals$pumpedOrigins.add(origin);
-            betterportals$logger.debug(
-                    "[CeleritasBootstrap] manager={} sections={} graphDispatchUs={}",
-                    Integer.toHexString(System.identityHashCode(manager)),
-                    manager.getTotalSections(),
-                    (System.nanoTime() - started) / 1_000L);
+            if (ViewDebug.isEnabled()) {
+                betterportals$logger.debug(
+                        "[CeleritasBootstrap] manager={} sections={} graphDispatchUs={}",
+                        Integer.toHexString(System.identityHashCode(manager)),
+                        manager.getTotalSections(),
+                        (System.nanoTime() - started) / 1_000L);
+            }
         } catch (RuntimeException e) {
             this.betterportals$bootstrapDisabled = true;
             betterportals$logger.warn("Disabling Celeritas portal terrain bootstrap for this renderer", e);

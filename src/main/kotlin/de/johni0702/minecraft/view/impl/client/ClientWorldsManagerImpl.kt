@@ -6,6 +6,7 @@ import de.johni0702.minecraft.betterportals.common.post
 import de.johni0702.minecraft.betterportals.common.removeAtOrNull
 import de.johni0702.minecraft.view.client.ClientWorldsManager
 import de.johni0702.minecraft.view.impl.LOGGER
+import de.johni0702.minecraft.view.impl.debugLog
 import de.johni0702.minecraft.view.impl.common.clientSyncIgnoringView
 import io.netty.buffer.ByteBuf
 import net.minecraft.client.Minecraft
@@ -125,7 +126,7 @@ internal class ClientWorldsManagerImpl : ClientWorldsManager {
     }
 
     fun destroyState(view: ClientState) {
-        LOGGER.debug("Removing view {}", view)
+        debugLog { LOGGER.debug("Removing view {}", view) }
         CeleritasViewDiagnostics.log(view, "destroying")
         if (activeView != mainView) throw IllegalStateException("Main view must be active")
         if (view == mainView) throw IllegalArgumentException("Cannot remove main view")
@@ -228,7 +229,7 @@ internal class ClientWorldsManagerImpl : ClientWorldsManager {
                     posX, entityBoundingBox.minY, posZ, rotationYaw, rotationPitch, onGround))
         }
 
-        LOGGER.info("Swapping main view $mainView with $newMainView")
+        debugLog { LOGGER.debug("Swapping main view {} with {}", mainView, newMainView) }
 
         makeMainView(newMainView)
         updatePosition(player)
@@ -287,7 +288,7 @@ internal class ClientWorldsManagerImpl : ClientWorldsManager {
     }
 
     fun makeMainViewAck(dimensionId: Int) {
-        LOGGER.info("Ack for swap of {}", dimensionId)
+        debugLog { LOGGER.debug("Ack for swap of {}", dimensionId) }
 
         val expectedId = unconfirmedChanges.getOrNull(0)?.new?.dimension
         if (expectedId != dimensionId) {

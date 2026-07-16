@@ -1,6 +1,8 @@
 package de.johni0702.minecraft.view.impl.client
 
 import de.johni0702.minecraft.view.impl.LOGGER
+import de.johni0702.minecraft.view.impl.ViewDebug
+import de.johni0702.minecraft.view.impl.debugLog
 import net.minecraft.client.multiplayer.WorldClient
 
 /**
@@ -15,12 +17,12 @@ internal object CeleritasViewDiagnostics {
 
     fun logInitialization(world: WorldClient, stage: String) {
         if (available) {
-            LOGGER.info("[Celeritas] view dim={} stage={}", world.provider.dimension, stage)
+            debugLog { LOGGER.debug("[Celeritas] view dim={} stage={}", world.provider.dimension, stage) }
         }
     }
 
     fun log(view: ClientState, stage: String) {
-        if (!available) return
+        if (!available || !ViewDebug.isEnabled()) return
 
         try {
             val world = view.world
@@ -37,7 +39,7 @@ internal object CeleritasViewDiagnostics {
             val visible = renderer?.javaClass?.getMethod("getVisibleChunkCount")?.invoke(renderer)
             val complete = renderer?.javaClass?.getMethod("isTerrainRenderComplete")?.invoke(renderer)
 
-            LOGGER.info(
+            LOGGER.debug(
                 "[Celeritas] view dim={} stage={} loadedChunks={} readyChunks={} sections={} visible={} complete={}",
                 world.provider.dimension, stage, loadedChunks.size, readyChunks.size, sections, visible, complete
             )

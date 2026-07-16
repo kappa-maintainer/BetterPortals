@@ -2,6 +2,7 @@ package de.johni0702.minecraft.view.impl.server
 
 import de.johni0702.minecraft.betterportals.common.haveCubicChunks
 import de.johni0702.minecraft.view.impl.LOGGER
+import de.johni0702.minecraft.view.impl.debugLog
 import de.johni0702.minecraft.view.impl.mixin.AccessorCubeWatcher_CC
 import de.johni0702.minecraft.view.impl.net.ChangeServerMainWorld
 import de.johni0702.minecraft.view.impl.net.sendTo
@@ -138,9 +139,11 @@ internal class ServerWorldManager(
         val player = main.player
         val camera = this.player
 
-        LOGGER.info("Swapping main view {}/{}/{} with {}/{}/{}",
-                player.posX, player.posY, player.posZ,
-                camera.posX, camera.posY, camera.posZ)
+        debugLog {
+            LOGGER.debug("Swapping main view {}/{}/{} with {}/{}/{}",
+                    player.posX, player.posY, player.posZ,
+                    camera.posX, camera.posY, camera.posZ)
+        }
 
         val oldDim = player.dimension
         val oldWorld = player.serverWorld

@@ -2,6 +2,7 @@ package de.johni0702.minecraft.view.impl.client
 
 import de.johni0702.minecraft.betterportals.common.forceSpawnEntity
 import de.johni0702.minecraft.view.impl.LOGGER
+import de.johni0702.minecraft.view.impl.debugLog
 import io.netty.channel.embedded.EmbeddedChannel
 import net.minecraft.client.Minecraft
 import net.minecraft.client.entity.EntityPlayerSP
@@ -206,12 +207,12 @@ internal class ClientState(
 
             val view: ClientState
             if (oldView == null) {
-                LOGGER.debug("Creating new view")
+                debugLog { LOGGER.debug("Creating new view") }
                 CeleritasViewDiagnostics.logInitialization(world, "components-start")
                 view = ClientState(manager, world, camera, channel, networkManager)
 
             } else {
-                LOGGER.debug("Reusing stored view")
+                debugLog { LOGGER.debug("Reusing stored view") }
                 view = ClientState(manager, world, camera, channel, networkManager)
                 view.itemRenderer = oldView.itemRenderer
                 view.renderGlobal = oldView.renderGlobal
