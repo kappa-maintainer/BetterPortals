@@ -231,7 +231,7 @@ internal object PortalRenderManager {
             // planePos however is currently absolute world space, so we need to convert it
             val relPlanePos = planePos - camera.feetPosition
             glClipPlane(GL11.GL_CLIP_PLANE5, cameraSide.directionVec.to3d().scale(-1.0), relPlanePos)
-            // Diagnostic: leave the portal clip plane disabled to isolate Celeritas terrain clipping failures.
+            GL11.glEnable(GL11.GL_CLIP_PLANE5) // FIXME don't hard-code clipping plane id
 
             // Reduce fog by distance between camera and portal, we will later re-apply this distance worth of fog
             // to the rendered portal but then with the fog of the correct dimension.
