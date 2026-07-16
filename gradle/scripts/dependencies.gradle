@@ -57,6 +57,9 @@ dependencies {
 
     modImplementation ('curse.maven:travelhut-255576:2629517')
 
+    modImplementation ('curse.maven:nothirium-624960:7441674')
+    modImplementation ('curse.maven:renderlib-624967:6461209')
+
     modImplementation 'io.github.chaosunity.forgelin:Forgelin-Continuous:2.4.0.0'
     runtimeOnly 'org.jetbrains.kotlin:kotlin-reflect:2.3.21'
 

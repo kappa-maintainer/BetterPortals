@@ -19,6 +19,7 @@ public class BetterPortalsMixinConfigPlugin implements IMixinConfigPlugin {
     private boolean hasSponge = Launch.classLoader.getClassBytes("org.spongepowered.common.SpongePlatform") != null;
     private boolean hasVC = Launch.classLoader.getClassBytes("org.vivecraft.asm.VivecraftASMTransformer") != null;
     private boolean hasCeleritas = Launch.classLoader.getClassBytes("org.taumc.celeritas.CeleritasVintage") != null;
+    private boolean hasNothirium = Launch.classLoader.getClassBytes("meldexun.nothirium.mc.renderer.ChunkRenderManager") != null;
     private boolean vcVR = hasVC && Launch.classLoader.getClassBytes("org.vivecraft.provider.MCOpenVR") != null;
     private boolean vcNonVR = hasVC && !vcVR;
 
@@ -32,6 +33,10 @@ public class BetterPortalsMixinConfigPlugin implements IMixinConfigPlugin {
         logger.debug("hasSponge: " + hasSponge);
         logger.debug("hasVC: " + hasVC + " (VR: " + vcVR + ")");
         logger.debug("hasCeleritas: " + hasCeleritas);
+        logger.debug("hasNothirium: " + hasNothirium);
+        if (hasCeleritas && hasNothirium) {
+            logger.warn("Both Celeritas and Nothirium are installed; BetterPortals will use Celeritas terrain compatibility");
+        }
     }
 
     @Override
@@ -41,7 +46,12 @@ public class BetterPortalsMixinConfigPlugin implements IMixinConfigPlugin {
             logger.debug("Skipping {} because Celeritas owns RenderGlobal terrain rendering", mixinClassName);
             return false;
         }
+        if (hasNothirium && !hasCeleritas && isNothiriumIncompatibleTerrainMixin(mixinClassName)) {
+            logger.debug("Skipping {} because Nothirium owns RenderGlobal terrain rendering", mixinClassName);
+            return false;
+        }
         if (mixinClassName.endsWith("_Celeritas")) return hasCeleritas;
+        if (mixinClassName.endsWith("_Nothirium")) return hasNothirium && !hasCeleritas;
         if (vcVR) {
             if (mixinClassName.endsWith("MixinEntityRenderer_NoOF")) {
                 return true;
@@ -70,6 +80,15 @@ public class BetterPortalsMixinConfigPlugin implements IMixinConfigPlugin {
     private boolean isCeleritasIncompatibleTerrainMixin(String mixinClassName) {
         return mixinClassName.endsWith("view.impl.mixin.MixinRenderGlobal")
                 || mixinClassName.endsWith("view.impl.mixin.MixinChunkCompileTaskGenerator")
+                || mixinClassName.endsWith("view.impl.mixin.MixinChunkRenderWorker")
+                || mixinClassName.endsWith("view.impl.mixin.MixinRenderChunk")
+                || mixinClassName.endsWith("view.impl.mixin.MixinRenderChunk_OF")
+                || mixinClassName.endsWith("view.impl.mixin.MixinViewFrustum")
+                || mixinClassName.endsWith("view.impl.mixin.MixinViewFrustum_OF");
+    }
+
+    private boolean isNothiriumIncompatibleTerrainMixin(String mixinClassName) {
+        return mixinClassName.endsWith("view.impl.mixin.MixinChunkCompileTaskGenerator")
                 || mixinClassName.endsWith("view.impl.mixin.MixinChunkRenderWorker")
                 || mixinClassName.endsWith("view.impl.mixin.MixinRenderChunk")
                 || mixinClassName.endsWith("view.impl.mixin.MixinRenderChunk_OF")

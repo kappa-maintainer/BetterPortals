@@ -3,6 +3,7 @@ package de.johni0702.minecraft.view.impl.client
 import de.johni0702.minecraft.betterportals.common.forceSpawnEntity
 import de.johni0702.minecraft.view.impl.LOGGER
 import de.johni0702.minecraft.view.impl.debugLog
+import de.johni0702.minecraft.view.impl.compat.nothirium.NothiriumRenderGlobalExt
 import io.netty.channel.embedded.EmbeddedChannel
 import net.minecraft.client.Minecraft
 import net.minecraft.client.entity.EntityPlayerSP
@@ -131,6 +132,7 @@ internal class ClientState(
     override fun toString(): String = "ClientState for world ${world.provider.dimension}"
 
     internal fun captureState(mc: Minecraft) {
+        (mc.renderGlobal as? NothiriumRenderGlobalExt)?.`betterportals$activateNothiriumContext`()
         itemRenderer = mc.itemRenderer
         particleManager = mc.effectRenderer
         renderGlobal = mc.renderGlobal
@@ -148,6 +150,7 @@ internal class ClientState(
         mc.itemRenderer = itemRenderer
         mc.effectRenderer = particleManager
         mc.renderGlobal = renderGlobal
+        (renderGlobal as? NothiriumRenderGlobalExt)?.`betterportals$activateNothiriumContext`()
         mc.entityRenderer = entityRenderer
         mc.player = thePlayer
         mc.world = _world
@@ -229,6 +232,7 @@ internal class ClientState(
                     view.renderGlobal = RenderGlobal(mc)
                     CeleritasViewDiagnostics.logInitialization(world, "render-global-created")
                     mc.renderGlobal = view.renderGlobal
+                    (view.renderGlobal as? NothiriumRenderGlobalExt)?.`betterportals$activateNothiriumContext`()
                     view.entityRenderer = EntityRenderer(mc, mc.resourceManager)
                     CeleritasViewDiagnostics.logInitialization(world, "entity-renderer-created")
                     mc.entityRenderer = view.entityRenderer
