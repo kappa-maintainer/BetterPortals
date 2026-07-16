@@ -106,7 +106,7 @@ public abstract class MixinSimpleWorldRenderer_Celeritas {
             boolean spectator,
             boolean updateChunksImmediately,
             CallbackInfo ci) {
-        RenderPass current = CeleritasPassClassifier.currentSyntheticPass();
+        RenderPass current = ViewRenderManager.Companion.getINSTANCE().getCurrent();
         if (current == null) {
             return;
         }
@@ -114,8 +114,8 @@ public abstract class MixinSimpleWorldRenderer_Celeritas {
         this.betterportals$resetForNewManager();
         RenderSectionManager manager = this.renderSectionManager;
         BlockPos origin = this.betterportals$currentOrigin;
-        // Portal passes alternate cameras on the same Celeritas renderer. Commit this pass's graph before drawing it
-        // instead of using the result from the previous pass while the new asynchronous search is still running.
+        // Multiple passes can share one Celeritas renderer. Commit this pass's graph before drawing it instead of
+        // using the result from a recursive pass in the same world while the new search is still running.
         manager.finishAllGraphUpdates();
         if (this.betterportals$bootstrapDisabled || origin == null
                 || this.betterportals$pumpedOrigins.contains(origin) || manager.getTotalSections() == 0) {

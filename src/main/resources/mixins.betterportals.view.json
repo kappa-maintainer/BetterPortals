@@ -30,6 +30,7 @@
     "MixinIntegratedServer",
     "MixinNetHandlerLoginClient",
     "MixinNetHandlerPlayerClient",
+    "MixinCeleritasWorldRenderer_Celeritas",
     "MixinChunkRenderDispatcher_Celeritas",
     "MixinRenderChunk",
     "MixinRenderChunk_OF",
